@@ -13,7 +13,7 @@ poetry run python main.py -b
 
 `-v` or `--version` is for version
 
-`-b` or `--benchmark` is for benchmarking`
+`-b` or `--benchmark` is for benchmarking
 
 **Examples:**
 
