@@ -3,6 +3,17 @@ import os
 from common.classes import Instance, Customer
 
 
+def get_all_instances_ids():
+    instances_ids: list[str] = []
+    for file in os.listdir("./instances"):
+        if file.endswith(".TXT"):
+            with open("./instances/" + file) as f:
+                lines = f.readlines()
+                instance_id = lines[0].replace("\n", "").strip()
+                instances_ids.append(instance_id)
+    return instances_ids
+
+
 def get_instance(path: str):
     global instance_id
     global number_of_vehicles

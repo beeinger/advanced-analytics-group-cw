@@ -1,6 +1,7 @@
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 from common.classes import Instance
+from handlers.solutions import save_solution
 import sys
 import builtins
 
@@ -9,7 +10,7 @@ MAX_TRUCK_TRAVEL_TIME = sys.maxsize  # 24 hours in minutes
 MAX_WAIT_TIME = sys.maxsize  # 24 hours in minutes
 # number of customers includes the 0 which is the depot
 # 70 - 80
-LIMIT_NUMBER_OF_CUSTOMERS = -1  # out of 1000
+LIMIT_NUMBER_OF_CUSTOMERS = 5  # out of 1000
 VEHICLE_SPEED = 60 / 60  # 60 km/h in km/min
 
 
@@ -65,27 +66,34 @@ def print_solution(data, manager, routing, solution, routes, instance):
 
     """Prints solution on console."""
     # print(f'Objective: {solution.ObjectiveValue()}')
+    solution_obj = {
+        "total_distance": 0,
+        "total_load": 0,
+        "num_vehicles": 0,
+        "solution": [],
+    }
     total_distance = 0
     total_load = 0
     num_vehicles = 0
     for vehicle_id in range(data['num_vehicles']):
         index = routing.Start(vehicle_id)
-        plan_output = ""
+        route = []
         route_distance = 0
         route_load = 0
         while not routing.IsEnd(index):
             node_index = manager.IndexToNode(index)
             route_load += data['demands'][node_index]
-            if (node_index != data['depot']):
-                plan_output += ' {0}'.format(node_index, route_load)
+            route.append(node_index)
             previous_index = index
             index = solution.Value(routing.NextVar(index))
             route_distance += routing.GetArcCostForVehicle(
                 previous_index, index, vehicle_id)
         if (route_distance > 0):
             num_vehicles += 1
-            if (routes):
-                print('Route {}:'.format(num_vehicles) + plan_output + '; load: {1}kg; distance: {2}m'.format(
+            route.append(data["depot"])
+            solution_obj["solution"].append(route)
+            if routes:
+                print('Route {}: '.format(num_vehicles) + " ".join(route) + '; load: {1}kg; distance: {2}m'.format(
                     manager.IndexToNode(index), route_load, route_distance))
         total_distance += route_distance
         total_load += route_load
@@ -93,6 +101,12 @@ def print_solution(data, manager, routing, solution, routes, instance):
     print('Total load of all routes: {} kg'.format(total_load))
     print('Total number of vehicles used: {} / {}'.format(num_vehicles,
           data['num_vehicles']))
+
+    solution_obj["total_distance"] = total_distance
+    solution_obj["total_load"] = total_load
+    solution_obj["num_vehicles"] = num_vehicles
+
+    save_solution(solution_obj, instance)
 
 
 def handle_model(instance: Instance, routes: bool):

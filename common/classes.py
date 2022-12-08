@@ -10,6 +10,17 @@ class Customer:
     due_date: int
     service_time: int
 
+    def serialize(self):
+        return {
+            "customer_id": self.customer_id,
+            "x": self.x,
+            "y": self.y,
+            "demand": self.demand,
+            "ready_time": self.ready_time,
+            "due_date": self.due_date,
+            "service_time": self.service_time
+        }
+
     def distance_to(self, customer: "Customer"):
         # return abs(self.x - customer.x) + abs(self.y - customer.y)
         return math.ceil(math.sqrt((self.x - customer.x)**2 + (self.y - customer.y)**2))
@@ -35,6 +46,17 @@ class Instance:
     number_of_vehicles: int
     total_capacity: int
     customers: list[Customer]
+
+    def serialize_customers(self):
+        return [customer.serialize() for customer in self.customers]
+
+    def serialize(self):
+        return {
+            "instance_id": self.instance_id,
+            "number_of_vehicles": self.number_of_vehicles,
+            "total_capacity": self.total_capacity,
+            "customers": self.serialize_customers()
+        }
 
     def get_time_windows(self, limit: int = -1):
         length = len(self.customers)

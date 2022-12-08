@@ -2,12 +2,14 @@
 name = "advancedanalytics"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["beeinger"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
 ortools = "^9.5.2237"
+matplotlib = "^3.6.2"
+networkx = "^2.8.8"
 
 
 [tool.poetry.group.dev.dependencies]

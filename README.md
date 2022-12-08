@@ -6,31 +6,17 @@
 
 ```bash
 poetry install
-poetry run python main.py -b
+poetry run python main.py -b -v 3 -a -d
 ```
 
 ### 4. Flags
 
-`-v` or `--version` is for version
+`--help` use the help flag to see all the available flags and their descriptions
 
-`-b` or `--benchmark` is for benchmarking
-
-**Examples:**
-
-The default version is 2, so it doesn't need the `-v` flag, but if you want to you can run it like that as well
+**Usage:**
 
 ```
-poetry run python main.py -v 2 -b
+poetry run python main.py --help
 ```
 
-If you want to run version 3, you can do so by running
-
-```
-poetry run python main.py -v 3 -b
-```
-
-If you don't want benchmarking, you can remove the `-b` flag.
-
-```
-poetry run python main.py
-```
+### 4. See the solutions in the `solutions` folder
