@@ -10,7 +10,7 @@ MAX_TRUCK_TRAVEL_TIME = sys.maxsize  # 24 hours in minutes
 MAX_WAIT_TIME = sys.maxsize  # 24 hours in minutes
 # number of customers includes the 0 which is the depot
 # 70 - 80
-LIMIT_NUMBER_OF_CUSTOMERS = 5  # out of 1000
+LIMIT_NUMBER_OF_CUSTOMERS = -1  # out of 1000
 VEHICLE_SPEED = 60 / 60  # 60 km/h in km/min
 
 
