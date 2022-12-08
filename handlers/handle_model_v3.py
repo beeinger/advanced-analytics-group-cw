@@ -1,11 +1,15 @@
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 from common.classes import Instance
+import sys
+import builtins
 
-MAX_TRUCK_TRAVEL_DISTANCE = 3 * 1000  # 3000 km
-MAX_TRUCK_TRAVEL_TIME = 24 * 60  # 24 hours in minutes
-MAX_WAIT_TIME = 24 * 60  # 24 hours in minutes
-LIMIT_NUMBER_OF_CUSTOMERS = 4  # out of 1000
+MAX_TRUCK_TRAVEL_DISTANCE = sys.maxsize  # 3000 km
+MAX_TRUCK_TRAVEL_TIME = sys.maxsize  # 24 hours in minutes
+MAX_WAIT_TIME = sys.maxsize  # 24 hours in minutes
+# number of customers includes the 0 which is the depot
+# 70 - 80
+LIMIT_NUMBER_OF_CUSTOMERS = -1  # out of 1000
 VEHICLE_SPEED = 60 / 60  # 60 km/h in km/min
 
 
@@ -21,8 +25,6 @@ def create_data_model(instance: Instance):
     data['vehicle_capacities'] = instance.get_vehicle_capacities()
     data['num_vehicles'] = instance.number_of_vehicles
     data['depot'] = 0
-    print(data['time_matrix'])
-    print(data['time_windows'])
 
     return data
 
@@ -56,32 +58,35 @@ def create_data_model(instance: Instance):
 # Logs distance
 
 
-def print_solution(data, manager, routing, solution):
+def print_solution(data, manager, routing, solution, routes, instance):
+    def print(*objs, **kwargs):
+        builtins.print("[{}] ".format(
+            instance.instance_id), *objs, **kwargs)
+
     """Prints solution on console."""
-    print(f'Objective: {solution.ObjectiveValue()}')
+    # print(f'Objective: {solution.ObjectiveValue()}')
     total_distance = 0
     total_load = 0
     num_vehicles = 0
     for vehicle_id in range(data['num_vehicles']):
         index = routing.Start(vehicle_id)
-        plan_output = 'Route for vehicle {}:\n'.format(vehicle_id)
+        plan_output = ""
         route_distance = 0
         route_load = 0
         while not routing.IsEnd(index):
             node_index = manager.IndexToNode(index)
             route_load += data['demands'][node_index]
-            plan_output += ' {0} Load({1}) -> '.format(node_index, route_load)
+            if (node_index != data['depot']):
+                plan_output += ' {0}'.format(node_index, route_load)
             previous_index = index
             index = solution.Value(routing.NextVar(index))
             route_distance += routing.GetArcCostForVehicle(
                 previous_index, index, vehicle_id)
-        plan_output += ' {0} Load({1})\n'.format(manager.IndexToNode(index),
-                                                 route_load)
-        plan_output += 'Distance of the route: {}m\n'.format(route_distance)
-        plan_output += 'Load of the route: {}\n'.format(route_load)
         if (route_distance > 0):
-            print(plan_output)
             num_vehicles += 1
+            if (routes):
+                print('Route {}:'.format(num_vehicles) + plan_output + '; load: {1}kg; distance: {2}m'.format(
+                    manager.IndexToNode(index), route_load, route_distance))
         total_distance += route_distance
         total_load += route_load
     print('Total distance of all routes: {} m'.format(total_distance))
@@ -90,13 +95,14 @@ def print_solution(data, manager, routing, solution):
           data['num_vehicles']))
 
 
-def handle_model(instance: Instance):
+def handle_model(instance: Instance, routes: bool):
     data = create_data_model(instance)
 
     manager = pywrapcp.RoutingIndexManager(len(data['distance_matrix']),
                                            data['num_vehicles'], data['depot'])
     routing = pywrapcp.RoutingModel(manager)
 
+    #! --- NEW STARTS HERE ---
     # Create and register a transit callback.
     def time_callback(from_index, to_index):
         """Returns the travel time between the two nodes."""
@@ -139,8 +145,10 @@ def handle_model(instance: Instance):
             time_dimension.CumulVar(routing.Start(i)))
         routing.AddVariableMinimizedByFinalizer(
             time_dimension.CumulVar(routing.End(i)))
+    #! --- NEW ENDS HERE ---
 
     # -- Distance --
+
     def distance_callback(from_index, to_index):
         """Returns the distance between the two nodes."""
         # Convert from routing variable Index to distance matrix NodeIndex.
@@ -187,6 +195,6 @@ def handle_model(instance: Instance):
 
     # Print solution on console.
     if solution:
-        print_solution(data, manager, routing, solution)
+        print_solution(data, manager, routing, solution, routes, instance)
     else:
         print('No solution found !')

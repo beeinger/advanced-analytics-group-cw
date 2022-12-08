@@ -1,9 +1,14 @@
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 from common.classes import Instance
+import sys
+import builtins
 
-LIMIT_NUMBER_OF_CUSTOMERS = 20
-MAX_TRUCK_TRAVEL_DISTANCE = 3 * 1000  # 3000 km
+# there is a 1000 customers
+# we limit the number of customers to 20 for testing speed
+# It's basically a sample subset of the customers
+LIMIT_NUMBER_OF_CUSTOMERS = -1
+MAX_TRUCK_TRAVEL_DISTANCE = sys.maxsize  # 3000 km
 
 
 def create_data_model(instance: Instance):
@@ -18,32 +23,35 @@ def create_data_model(instance: Instance):
     return data
 
 
-def print_solution(data, manager, routing, solution):
+def print_solution(data, manager, routing, solution, routes, instance):
+    def print(*objs, **kwargs):
+        builtins.print("[{}] ".format(
+            instance.instance_id), *objs, **kwargs)
+
     """Prints solution on console."""
-    print(f'Objective: {solution.ObjectiveValue()}\n')
+    # print(f'Objective: {solution.ObjectiveValue()}')
     total_distance = 0
     total_load = 0
     num_vehicles = 0
     for vehicle_id in range(data['num_vehicles']):
         index = routing.Start(vehicle_id)
-        plan_output = 'Route for vehicle {}:\n'.format(vehicle_id)
+        plan_output = ""
         route_distance = 0
         route_load = 0
         while not routing.IsEnd(index):
             node_index = manager.IndexToNode(index)
             route_load += data['demands'][node_index]
-            plan_output += ' {0} Load({1}) -> '.format(node_index, route_load)
+            if (node_index != data['depot']):
+                plan_output += ' {0}'.format(node_index, route_load)
             previous_index = index
             index = solution.Value(routing.NextVar(index))
             route_distance += routing.GetArcCostForVehicle(
                 previous_index, index, vehicle_id)
-        plan_output += ' {0} Load({1})\n'.format(manager.IndexToNode(index),
-                                                 route_load)
-        plan_output += 'Distance of the route: {}m\n'.format(route_distance)
-        plan_output += 'Load of the route: {}\n'.format(route_load)
         if (route_distance > 0):
-            print(plan_output)
             num_vehicles += 1
+            if (routes):
+                print('Route {}:'.format(num_vehicles) + plan_output + '; load: {1}kg; distance: {2}m\n'.format(
+                    manager.IndexToNode(index), route_load, route_distance))
         total_distance += route_distance
         total_load += route_load
     print('Total distance of all routes: {} m'.format(total_distance))
@@ -52,7 +60,7 @@ def print_solution(data, manager, routing, solution):
           data['num_vehicles']))
 
 
-def handle_model(instance: Instance):
+def handle_model(instance: Instance, routes: bool):
     data = create_data_model(instance)
 
     manager = pywrapcp.RoutingIndexManager(len(data['distance_matrix']),
@@ -106,6 +114,6 @@ def handle_model(instance: Instance):
 
     # Print solution on console.
     if solution:
-        print_solution(data, manager, routing, solution)
+        print_solution(data, manager, routing, solution, routes, instance)
     else:
         print('No solution found !')

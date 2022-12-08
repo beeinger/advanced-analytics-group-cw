@@ -2,7 +2,7 @@ from ortools.linear_solver import pywraplp
 from common.classes import Instance
 
 
-def handle_model(instance: Instance):
+def handle_model(instance: Instance, routes: bool):
     # define the solver and the MIP model
     solver = pywraplp.Solver.CreateSolver('SCIP')
     if not solver:

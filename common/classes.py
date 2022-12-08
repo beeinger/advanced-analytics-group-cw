@@ -11,15 +11,22 @@ class Customer:
     service_time: int
 
     def distance_to(self, customer: "Customer"):
-        return abs(self.x - customer.x) + abs(self.y - customer.y)
+        # return abs(self.x - customer.x) + abs(self.y - customer.y)
+        return math.ceil(math.sqrt((self.x - customer.x)**2 + (self.y - customer.y)**2))
 
     def __init__(self, customer: dict):
         self.customer_id = customer["customer_id"]
         self.x = customer["x"]
         self.y = customer["y"]
         self.demand = customer["demand"]
-        self.ready_time = math.ceil(customer["ready_time"]/100*60)
-        self.due_date = math.ceil(customer["due_date"]/100*60)
+
+        # 773/100 => 7.73 * 60 => 463.8
+        # self.ready_time = math.ceil(customer["ready_time"]/100*60)
+        # self.due_date = math.ceil(customer["due_date"]/100*60)
+
+        self.ready_time = customer["ready_time"]
+        self.due_date = customer["due_date"]
+
         self.service_time = customer["service_time"]
 
 
@@ -34,6 +41,7 @@ class Instance:
         if (limit > 1 and limit < length):
             length = limit
 
+        # [(0, 10), (20, 40)]
         time_windows: list[tuple[int, int]] = []
         for i in range(length):
             time_windows.append(
@@ -55,6 +63,8 @@ class Instance:
         if (limit > 1 and limit < length):
             length = limit
 
+        # [[1, 1], [1, 1]]
+        # [[0, 20, 30], [20, 0, 40], [30, 40, 0]]
         distance_matrix: list[list[int]] = []
         for i in range(length):
             distance_matrix.append([])
@@ -64,16 +74,20 @@ class Instance:
         return distance_matrix
 
     def get_demands(self, limit: int = -1):
+        # Limiter
         length = len(self.customers)
         if (limit > 1 and limit < length):
             length = limit
 
+        # [30, 40, 20, 10]
         demands: list[int] = []
         for i in range(length):
             demands.append(self.customers[i].demand)
         return demands
 
     def get_vehicle_capacities(self):
+        # [20, 30, 40]
+        # 200 -> [200] * number_of_vehicles => [200, 200, 200]
         return [self.total_capacity] * self.number_of_vehicles
 
     # initialize the instance
