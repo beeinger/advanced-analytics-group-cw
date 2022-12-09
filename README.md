@@ -1,6 +1,6 @@
 ### 1. Make sure you have python 3.9 installed
 
-### 2. Install poetry https://python-poetry.org/
+### 2. [Install poetry](https://python-poetry.org/docs/#installation)
 
 ### 3. Run these commands:
 
