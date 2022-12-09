@@ -19,4 +19,4 @@ poetry run python main.py -b -v 3 -a -d
 poetry run python main.py --help
 ```
 
-### 3. See the solutions in the `solutions` folder
+### 4. See the solutions in the `solutions` folder
